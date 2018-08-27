@@ -41,7 +41,7 @@ if __name__ == '__main__':
             {'svm__kernel': ['rbf', 'sigmoid', 'poly'], 'svm__C': [2**x for x in range(0, 6)]},
         ]
     inner_cv = KFold(n_splits=3, shuffle=True, random_state=1)
-    grid_search = GridSearchCV(clf, param_grid, cv=inner_cv,  n_jobs=1, scoring='accuracy', verbose=3)
+    grid_search = GridSearchCV(clf, param_grid, cv=inner_cv,  n_jobs=1, scoring='accuracy', verbose=0)
     grid_search.fit(Train_Matrix.drop(['Match_result'], axis=1), Train_Matrix['Match_result'])
     clf = grid_search.best_estimator_
     # data testing
