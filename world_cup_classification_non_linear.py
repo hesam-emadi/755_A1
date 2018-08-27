@@ -20,17 +20,18 @@ def extract_features(data_set):
 
 if __name__ == '__main__':
     data = pd.read_csv("./Data-assignment-1/World_Cup_2018/2018 worldcup.csv", index_col=0)
+    print(data.shape)
     categorical = ['Location','Phase','Team1','Team2','Team1_Continent','Team2_Continent','Normal_Time']
-    features, results = preprocessing(data, categorical)
-    print(results.head)
+    # features, results = preprocessing(data, categorical)
+    # print(results.shape)
 
-    labels = results.drop(["Total_Scores"], axis=1)
-    # features, labels = extract_features(data)
+    # labels = results.drop(["Total_Scores"], axis=1)
+    features, labels = extract_features(data)
 
     S = features.index
     sss = StratifiedShuffleSplit(n_splits=1, test_size=0.4, random_state=42)
-    # labels = LabelEncoder().fit(labels).transform(labels)
-    # features["Normal_Time"] = LabelEncoder().fit(features["Normal_Time"]).transform(features["Normal_Time"])
+    labels = LabelEncoder().fit(labels).transform(labels)
+    features["Normal_Time"] = LabelEncoder().fit(features["Normal_Time"]).transform(features["Normal_Time"])
 
     for train_index, test_index in sss.split(features, labels):
         train_ind, test_ind = S[train_index],S[test_index]
