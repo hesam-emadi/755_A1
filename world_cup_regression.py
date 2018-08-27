@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
 from preprocessing import preprocessing
 from sklearn.linear_model import Ridge
+from sklearn.metrics import explained_variance_score, mean_squared_error
 
 if __name__ == '__main__':
     worldcup = pd.read_csv("./Data-assignment-1/World_Cup_2018/2018 worldcup.csv", index_col=0)
@@ -35,7 +36,4 @@ if __name__ == '__main__':
     print(T_predict.shape)
     print(y_test.shape)
     print('*******************************************************************')
-    print("The prediction accuracy (tuned) for all testing sentence is : {:.2f}%."
-          .format(100*accuracy_score(T_predict, y_test)))
-    print(grid_search.best_params_)
-    print(grid_search.param_grid)
+    print(mean_squared_error(y_test, T_predict))
