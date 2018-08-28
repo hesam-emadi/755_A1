@@ -10,16 +10,9 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 
 if __name__ == '__main__':
-    data = pd.read_csv("./Data-assignment-1/Occupancy_sensor/occupancy_sensor_data.csv")
-    data['date'] = pd.to_datetime(data['date'])
-    data['date'] = [x.time() for x in data['date']]
+    data = pd.read_csv("./Data-assignment-1/Landsat/lantsat.csv", header=None)
 
-    data['hour'] = [x.hour for x in data['date']]
-    data['minute'] = [x.minute for x in data['date']]
-    data['second'] = [x.second for x in data['date']]
-    data.drop(['date'], axis=1, inplace=True)
-
-    X, y = data.drop(['Occupancy'], axis=1), data['Occupancy']
+    X, y = data.drop(data.columns[-1], axis=1), data[data.columns[-1]]
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
     scaler = preprocessing.StandardScaler().fit(X_train)
@@ -38,7 +31,7 @@ if __name__ == '__main__':
         ]
 
     inner_cv = KFold(n_splits=3, shuffle=True, random_state=42)
-    grid_search = GridSearchCV(model, param_grid, cv=inner_cv,  n_jobs=1, scoring='accuracy', verbose=0)
+    grid_search = GridSearchCV(model, param_grid, cv=inner_cv,  n_jobs=1, scoring='accuracy', verbose=1)
     grid_search.fit(X_train, y_train)
     clf = grid_search.best_estimator_
 
@@ -49,7 +42,6 @@ if __name__ == '__main__':
           .format(100*accuracy_score(y_test, T_predict)))
     print(grid_search.best_params_)
     print(grid_search.param_grid)
-
 
     model = SVC()
     model.fit(X_train, y_train)
