@@ -5,6 +5,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 import category_encoders as cs
+from sklearn.preprocessing import OneHotEncoder
 from sklearn.pipeline import FeatureUnion
 
 
@@ -41,6 +42,7 @@ def preprocessing(data, categorical):
             ('std_scaler', StandardScaler()),
         ])
 
+    a = OneHotEncoder()
     cat_pipeline = Pipeline([
             ('selector', DataFrameSelector(list(w_features_cat))),
             ('cat_encoder', cs.OneHotEncoder(drop_invariant=False)),

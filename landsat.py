@@ -4,7 +4,7 @@ from sklearn import preprocessing
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.svm import SVC
 from sklearn.linear_model import Perceptron
-from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB
+from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
