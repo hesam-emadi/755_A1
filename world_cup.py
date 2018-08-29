@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
@@ -11,6 +11,8 @@ from sklearn.linear_model import Perceptron
 from sklearn.naive_bayes import GaussianNB, BernoulliNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.exceptions import UndefinedMetricWarning
+from sklearn.preprocessing import label_binarize, LabelEncoder
+from sklearn.multiclass import OneVsRestClassifier
 from matplotlib import pyplot as plt
 import warnings
 
@@ -37,19 +39,27 @@ if __name__ == '__main__':
 
     X = features.drop(['Match_result'], axis=1)
     y = features['Match_result']
+    y = label_binarize(y, classes=['win', 'loss', 'draw'])
+    # y = LabelEncoder().fit_transform(y)
+    print(X.shape)
+    print(y.shape)
 
-    scoring = {'AUC': 'roc_auc', 'Accuracy': 'accuracy'}
+    scoring = {'AUC': 'roc_auc', 'Accuracy': make_scorer(accuracy_score)}
 
     param_grid = [
-            {'kernel': ['rbf'], 'C': [2**x for x in range(0, 6)], 'gamma': [1e-3, 1e-4]},
-            {'kernel': ['poly'], 'C': [2 ** x for x in range(0, 6)], 'degree': [1, 2, 3, 4, 5, 6]},
-            {'kernel': ['linear'], 'C': [2 ** x for x in range(0, 6)]},
-            {'kernel': ['sigmoid'], 'C': [2 ** x for x in range(0, 6)]},
+            # {'kernel': ['rbf'], 'C': [2**x for x in range(0, 6)], 'gamma': [1e-3, 1e-4]},
+            # {'kernel': ['poly'], 'C': [2 ** x for x in range(0, 6)], 'degree': [1, 2, 3, 4, 5, 6]},
+            # {'kernel': ['linear'], 'C': [2 ** x for x in range(0, 6)]},
+            # {'kernel': ['sigmoid'], 'C': [2 ** x for x in range(0, 6)]},
+            {'estimator__C': [0.5, 1.0, 1.5],
+            'estimator__tol': [1e-3, 1e-4, 1e-5],
+            }
         ]
 
     inner_cv = KFold(n_splits=3, shuffle=True, random_state=42)
-    grid_search = GridSearchCV(SVC(random_state=42), param_grid, cv=inner_cv,  n_jobs=1, scoring=scoring, verbose=0)
-    grid_search.fit(X_train, y_train)
+    a = OneVsRestClassifier(SVC())
+    grid_search = GridSearchCV(a, param_grid, cv=3, scoring=scoring, refit='AUC', verbose=0)
+    grid_search.fit(X, y)
     results = grid_search.cv_results_
 
     plt.figure(figsize=(13, 13))
@@ -61,11 +71,11 @@ if __name__ == '__main__':
     plt.grid()
 
     ax = plt.axes()
-    ax.set_xlim(0, 402)
-    ax.set_ylim(0.73, 1)
+    # ax.set_xlim(0, 402)
+    # ax.set_ylim(0.73, 1)
 
     # Get the regular numpy array from the MaskedArray
-    X_axis = np.array(results['param_min_samples_split'].data, dtype=float)
+    X_axis = np.array(results['param_estimator__C'].data, dtype=float)
 
     for scorer, color in zip(sorted(scoring), ['g', 'k']):
         for sample, style in (('train', '--'), ('test', '-')):
