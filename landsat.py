@@ -18,11 +18,8 @@ if __name__ == '__main__':
     scaler = preprocessing.StandardScaler().fit(X_train)
     X_train, X_test = scaler.transform(X_train), scaler.transform(X_test)
 
-    tuned_parameters = [{'alpha': [0.1, 0.5, 1, 2, 4, 8], 'normalize':[True, False], 'fit_intercept': [True, False]}]
-
     model = SVC()
-    grid = GridSearchCV(model, tuned_parameters)
-
+    print(model)
     param_grid = [
             {'kernel': ['rbf'], 'C': [2**x for x in range(0, 6)], 'gamma': [1e-3, 1e-4]},
             {'kernel': ['poly'], 'C': [2 ** x for x in range(0, 6)], 'degree': [1, 2, 3, 4, 5, 6]},

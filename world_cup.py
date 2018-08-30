@@ -44,16 +44,20 @@ if __name__ == '__main__':
     print(X.shape)
     print(y.shape)
 
-    scoring = {'AUC': 'roc_auc', 'Accuracy': make_scorer(accuracy_score)}
+    scoring = {'AUC': 'roc_auc', 'Accuracy': 'accuracy', 'r2': 'r2'}
+    # ['accuracy', 'adjusted_mutual_info_score', 'adjusted_rand_score', 'average_precision', 'completeness_score',
+    #  'explained_variance', 'f1', 'f1_macro', 'f1_micro', 'f1_samples', 'f1_weighted', 'fowlkes_mallows_score',
+    #  'homogeneity_score', 'mutual_info_score', 'neg_log_loss', 'neg_mean_absolute_error', 'neg_mean_squared_error',
+    #  'neg_mean_squared_log_error', 'neg_median_absolute_error', 'normalized_mutual_info_score', 'precision',
+    #  'precision_macro', 'precision_micro', 'precision_samples', 'precision_weighted', 'r2', 'recall', 'recall_macro',
+    #  'recall_micro', 'recall_samples', 'recall_weighted', 'roc_auc', 'v_measure_score']
 
     param_grid = [
             # {'kernel': ['rbf'], 'C': [2**x for x in range(0, 6)], 'gamma': [1e-3, 1e-4]},
             # {'kernel': ['poly'], 'C': [2 ** x for x in range(0, 6)], 'degree': [1, 2, 3, 4, 5, 6]},
             # {'kernel': ['linear'], 'C': [2 ** x for x in range(0, 6)]},
             # {'kernel': ['sigmoid'], 'C': [2 ** x for x in range(0, 6)]},
-            {'estimator__C': [0.5, 1.0, 1.5],
-            'estimator__tol': [1e-3, 1e-4, 1e-5],
-            }
+            {'estimator__C': [x for x in range(1, 20)], 'estimator__kernel': ['sigmoid']}
         ]
 
     inner_cv = KFold(n_splits=3, shuffle=True, random_state=42)
@@ -62,11 +66,11 @@ if __name__ == '__main__':
     grid_search.fit(X, y)
     results = grid_search.cv_results_
 
-    plt.figure(figsize=(13, 13))
+    plt.figure(figsize=(10, 10))
     plt.title("GridSearchCV evaluating using multiple scorers simultaneously",
               fontsize=16)
 
-    plt.xlabel("min_samples_split")
+    plt.xlabel("C")
     plt.ylabel("Score")
     plt.grid()
 
@@ -77,7 +81,7 @@ if __name__ == '__main__':
     # Get the regular numpy array from the MaskedArray
     X_axis = np.array(results['param_estimator__C'].data, dtype=float)
 
-    for scorer, color in zip(sorted(scoring), ['g', 'k']):
+    for scorer, color in zip(sorted(scoring), ['b', 'g', 'k']):
         for sample, style in (('train', '--'), ('test', '-')):
             sample_score_mean = results['mean_%s_%s' % (sample, scorer)]
             sample_score_std = results['std_%s_%s' % (sample, scorer)]
@@ -92,8 +96,8 @@ if __name__ == '__main__':
         best_score = results['mean_test_%s' % scorer][best_index]
 
         # Plot a dotted vertical line at the best score for that scorer marked by x
-        ax.plot([X_axis[best_index], ] * 2, [0, best_score],
-                linestyle='-.', color=color, marker='x', markeredgewidth=3, ms=8)
+        # ax.plot([X_axis[best_index], ] * 2, [0, best_score],
+        #         linestyle='-.', color=color, marker='x', markeredgewidth=3, ms=8)
 
         # Annotate the best score for that scorer
         ax.annotate("%0.2f" % best_score,

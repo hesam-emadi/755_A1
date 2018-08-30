@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import GridSearchCV, KFold
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, make_scorer, r2_score
+from sklearn.metrics import accuracy_score, make_scorer
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.tree import DecisionTreeClassifier
@@ -14,7 +14,9 @@ from sklearn.exceptions import UndefinedMetricWarning
 from sklearn.preprocessing import label_binarize, LabelEncoder
 from sklearn.multiclass import OneVsRestClassifier
 from matplotlib import pyplot as plt
+from graph import graph
 import warnings
+from gridSearch import graph_grid_search
 
 warnings.filterwarnings("ignore", category=FutureWarning)
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
@@ -39,14 +41,12 @@ if __name__ == '__main__':
 
     X = features.drop(['Match_result'], axis=1)
     y = features['Match_result']
-    # y = label_binarize(y, classes=['win', 'loss', 'draw'])
-    y = LabelEncoder().fit_transform(y)
+    y = label_binarize(y, classes=['win', 'loss', 'draw'])
+    # y = LabelEncoder().fit_transform(y)
     print(X.shape)
     print(y.shape)
 
-    # scoring = {'AUC': 'roc_auc', 'Accuracy': make_scorer(accuracy_score)}
-    scoring = {'Accuracy': 'accuracy', 'Precision': 'recall_micro', 'r2': 'r2', 'f1': 'f1_micro'}
-
+    scoring = {'AUC': 'roc_auc', 'Accuracy': make_scorer(accuracy_score)}
     # ['accuracy', 'adjusted_mutual_info_score', 'adjusted_rand_score', 'average_precision', 'completeness_score',
     #  'explained_variance', 'f1', 'f1_macro', 'f1_micro', 'f1_samples', 'f1_weighted', 'fowlkes_mallows_score',
     #  'homogeneity_score', 'mutual_info_score', 'neg_log_loss', 'neg_mean_absolute_error', 'neg_mean_squared_error',
@@ -59,17 +59,18 @@ if __name__ == '__main__':
             # {'kernel': ['poly'], 'C': [2 ** x for x in range(0, 6)], 'degree': [1, 2, 3, 4, 5, 6]},
             # {'kernel': ['linear'], 'C': [2 ** x for x in range(0, 6)]},
             # {'kernel': ['sigmoid'], 'C': [2 ** x for x in range(0, 6)]},
-            {'C': [0.5, 1.0, 1.5],
-            'tol': [1e-3, 1e-4, 1e-5],
+            {'estimator__C': [2**x for x in range(0, 6)], 'estimator__tol': [1e-3, 1e-4, 1e-5],
             }
         ]
 
     inner_cv = KFold(n_splits=3, shuffle=True, random_state=42)
-    a = SVC() #OneVsRestClassifier(SVC())
-    grid_search = GridSearchCV(a, param_grid, cv=3, scoring=scoring, refit='Precision', verbose=0)
+    a = OneVsRestClassifier(SVC())
+    graph_grid_search('title', ['C', 'Score'], a, param_grid, scoring, X_train,
+                      y_train, 'estimator__C')
+    grid_search = GridSearchCV(a, param_grid, cv=3, scoring=scoring, refit='AUC', verbose=0)
     grid_search.fit(X, y)
     results = grid_search.cv_results_
-
+    graph("a", ['a', 'b'], results, scoring, 'estimator__C')
     plt.figure(figsize=(13, 13))
     plt.title("GridSearchCV evaluating using multiple scorers simultaneously",
               fontsize=16)
@@ -83,9 +84,9 @@ if __name__ == '__main__':
     # ax.set_ylim(0.73, 1)
 
     # Get the regular numpy array from the MaskedArray
-    X_axis = np.array(results['param_C'].data, dtype=float)
+    X_axis = np.array(results['param_estimator__C'].data, dtype=float)
 
-    for scorer, color in zip(sorted(scoring), ['b', 'g', 'r', 'c']):
+    for scorer, color in zip(sorted(scoring), ['g', 'k']):
         for sample, style in (('train', '--'), ('test', '-')):
             sample_score_mean = results['mean_%s_%s' % (sample, scorer)]
             sample_score_std = results['std_%s_%s' % (sample, scorer)]
@@ -93,15 +94,15 @@ if __name__ == '__main__':
                             sample_score_mean + sample_score_std,
                             alpha=0.1 if sample == 'test' else 0, color=color)
             ax.plot(X_axis, sample_score_mean, style, color=color,
-                    alpha=0.8 if sample == 'test' else 0.7,
+                    alpha=1 if sample == 'test' else 0.7,
                     label="%s (%s)" % (scorer, sample))
 
         best_index = np.nonzero(results['rank_test_%s' % scorer] == 1)[0][0]
         best_score = results['mean_test_%s' % scorer][best_index]
 
-        # # Plot a dotted vertical line at the best score for that scorer marked by x
-        # ax.plot([X_axis[best_index], ] * 2, [0, best_score],
-        #         linestyle='-.', color=color, marker='x', markeredgewidth=3, ms=8)
+        # Plot a dotted vertical line at the best score for that scorer marked by x
+        ax.plot([X_axis[best_index], ] * 2, [0, best_score],
+                linestyle='-.', color=color, marker='x', markeredgewidth=3, ms=8)
 
         # Annotate the best score for that scorer
         ax.annotate("%0.2f" % best_score,
