@@ -1,5 +1,4 @@
 from matplotlib import pyplot as plt
-from matplotlib import colors
 import numpy as np
 
 
@@ -14,7 +13,7 @@ def graph(title, labels, results, metrics, x_param):
 
     x_axis = np.array(results['param_' + x_param].data, dtype=float)
 
-    for scorer, color in zip(sorted(metrics), ['b', 'g']):
+    for scorer, color in zip(sorted(metrics), ['b', 'g', 'k']):
         for sample, style in (('train', '--'), ('test', '-')):
 
             sample_score_mean = results['mean_{}_{}'.format(sample, scorer)]
@@ -28,4 +27,5 @@ def graph(title, labels, results, metrics, x_param):
 
     plt.legend(loc="best")
     # plt.grid('off')
+    plt.savefig(title + '.png')
     plt.show()
